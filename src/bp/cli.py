@@ -342,6 +342,18 @@ def cmd_doctor(args: argparse.Namespace) -> int:
     _out(f"JSON Schema 字段数={len(schema['properties']['perks']['items']['required'])}")
     _out(f"低谷判定现在={'高峰' if timeutil.is_deepseek_peak(timeutil.now_utc()) else '低谷'} "
          f"(北京时间 {timeutil.bj_dt(timeutil.now_utc()):%H:%M})")
+    span = timeutil.holiday_data_years()
+    if span:
+        this_year = timeutil.bj_dt(timeutil.now_utc()).year
+        if timeutil.holiday_data_covers(this_year):
+            _out(f"节假日数据 {span[0]}-{span[1]}，含今年（{this_year}）")
+        else:
+            # 这个缺口不能靠升级解决：2027 的国务院放假通知要等它发布，
+            # 而当前包的最新版本就到今年为止。说清楚代价，别让它静默降级。
+            _out(f"节假日数据 {span[0]}-{span[1]}，**不含 {this_year}**："
+                 f"该年法定节假日会被当成工作日。夜间 18:05 批跑不受影响"
+                 f"（按时间就不在高峰窗口内），只有白天补跑会被推迟到当晚。"
+                 f"等 chinese_calendar 发布 {this_year} 数据后升级即可消除")
     with db.session() as conn:
         _out("表: " + ", ".join(r["name"] for r in conn.execute(
             "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name")))

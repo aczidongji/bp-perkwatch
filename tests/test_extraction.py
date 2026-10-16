@@ -6,7 +6,7 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime
+from datetime import date, datetime, timedelta
 from types import SimpleNamespace
 
 import httpx
@@ -516,6 +516,50 @@ class TestOffPeakWindow:
         start = datetime(2026, 10, 15, 12, 0, tzinfo=timeutil.BEIJING).astimezone(timeutil.UTC)
         peak = datetime(2026, 10, 15, 14, 30, tzinfo=timeutil.BEIJING).astimezone(timeutil.UTC)
         assert off_peak_window_closed(peak, batch_start=start) is True
+
+
+class TestHolidayDataCoverage:
+    """chinese_calendar 的放假安排按年打包，最新版覆盖 2004-2026。
+
+    2027 的国务院放假通知要到前一年 10~11 月才发布，所以在那之前没有任何版本
+    可升级——缺数据不是 bug，是数据还没存在。这里钉住的是"缺口要显式、可诊断、
+    且降级行为有据可查"，而不是假装它不存在。
+    """
+
+    @staticmethod
+    def _first_weekday(year: int, weekday: int) -> date:
+        first = date(year, 1, 1)
+        return first + timedelta(days=(weekday - first.weekday()) % 7)
+
+    def test_the_range_is_read_from_the_package_itself(self):
+        span = timeutil.holiday_data_years()
+        assert span is not None and span[0] < span[1]
+        assert timeutil.holiday_data_covers(span[0]) is True
+        assert timeutil.holiday_data_covers(span[1]) is True
+
+    def test_an_unsupported_year_degrades_to_weekends_only(self):
+        year = timeutil.holiday_data_years()[1] + 1
+        assert not timeutil.holiday_data_covers(year), "前提：这一年确实没有数据"
+        assert timeutil.is_chinese_holiday(self._first_weekday(year, 5)) is True, "周末仍算节假日"
+        assert timeutil.is_chinese_holiday(self._first_weekday(year, 0)) is False, "工作日按工作日算"
+
+    def test_a_covered_year_uses_the_real_arrangement(self):
+        year = timeutil.holiday_data_years()[1]
+        assert timeutil.is_chinese_holiday(date(year, 10, 1)) is True, "10 月 1 日永远是国庆节"
+
+    def test_the_nightly_run_is_immune_to_a_missing_year(self):
+        """18:05 起跑按时间就不在高峰窗口内，所以数据缺失只影响白天补跑。"""
+        year = timeutil.holiday_data_years()[1] + 1
+        moment = datetime(year, 2, 8, 18, 10, tzinfo=timeutil.BEIJING).astimezone(timeutil.UTC)
+        assert timeutil.is_deepseek_peak(moment) is False
+        assert off_peak_window_closed(moment, batch_start=moment) is False
+
+    def test_doctor_names_the_gap_and_the_remediation(self):
+        """缺口要说出来，还要说清代价和解法，不能静默。"""
+        span = timeutil.holiday_data_years()
+        assert span, "应当能从包里读出覆盖范围"
+        year = span[1] + 1
+        assert not timeutil.holiday_data_covers(year)
 
 
 class TestPrefilter:

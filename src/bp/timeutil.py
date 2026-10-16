@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import zoneinfo
 from datetime import date, datetime, timedelta, timezone
+from functools import lru_cache
 
 from chinese_calendar import get_holiday_detail
 
@@ -49,12 +50,51 @@ def parse_iso(value: str | None) -> datetime | None:
     return to_utc(dt)
 
 
+@lru_cache(maxsize=1)
+def holiday_data_years() -> tuple[int, int] | None:
+    """The span of years chinese_calendar actually has arrangements for.
+
+    Read off the package's own holiday table instead of hardcoding a range, so
+    the answer stays correct after a plain dependency bump — which is exactly
+    the remediation when a new year's arrangement ships.
+    """
+    try:
+        from chinese_calendar.constants import holidays
+    except Exception:
+        return None
+    years = {day.year for day in holidays}
+    return (min(years), max(years)) if years else None
+
+
+def holiday_data_covers(year: int) -> bool:
+    """Whether the official arrangement for ``year`` is known.
+
+    The arrangement is published by the State Council late in the preceding
+    year, so the newest release of the package legitimately stops at the
+    current year. A gap here is "the data does not exist yet", not a bug, and
+    cannot be fixed by upgrading.
+    """
+    span = holiday_data_years()
+    return bool(span) and span[0] <= year <= span[1]
+
+
 def is_chinese_holiday(d: date) -> bool:
-    """True when ``d`` is a Chinese public holiday. Falls back to weekend-only
-    logic for years chinesecalendar does not cover."""
+    """True when ``d`` is a Chinese public holiday.
+
+    For years the package does not cover, falls back to weekend-only: a weekday
+    is then assumed to be a working day. That is right about 96% of the time
+    (11 public holiday days out of roughly 250 weekdays), and the cost of being
+    wrong is bounded — the nightly 18:05 batch falls outside DeepSeek's peak
+    windows by time of day, so a missed holiday only delays daytime catch-up
+    until that evening's run. ``bp doctor`` reports the gap rather than letting
+    it degrade silently.
+    """
+    if not holiday_data_covers(d.year):
+        return d.weekday() >= 5
     try:
         is_holiday, name = get_holiday_detail(d)
     except Exception:
+        # 只剩这一层作为兜底：不能让调度器因为一个查日期的调用而崩掉。
         return d.weekday() >= 5
     return bool(is_holiday) and name is not None
 

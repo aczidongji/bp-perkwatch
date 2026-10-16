@@ -104,7 +104,7 @@ src/bp/       采集 collect/{rss,web,search}.py
               运行 pipeline.py scheduler.py cli.py config.py db.py fetch.py timeutil.py
 systemd/      bp-tick.{service.in,timer}
 templates/    report.md.j2 + report.html.j2（日报的 Markdown 正文与 HTML 正文）
-tests/        10 个文件 338 条用例
+tests/        10 个文件 343 条用例
 scripts/      bootstrap.sh install-timers.sh
 data/         bp.db（WAL，已 gitignore）
 reports/      perk-report-YYYY-MM-DD.md
@@ -174,6 +174,14 @@ reports/      perk-report-YYYY-MM-DD.md
   随机抽 120 篇判定：75 篇被 0 成本跳过（"无触发词"或"命中负面词"），
   45 篇送模型——模型调用量只有采集量的三分之一左右。
 - **低谷价**：分析只在 18:05 之后跑，DeepSeek 高峰价是低谷价的 2 倍。
+  高峰窗口按北京时间 9:00-12:00、14:00-18:00，周一至周五，**不含中国法定节假日**
+  （节假日也算低谷）。18:05 起跑按时间就不在高峰窗口内，所以夜间批跑与节假日数据无关；
+  它只影响"白天补跑"——法定节假日那几天，补跑会被推迟到当晚 18:05。
+- **节假日数据的边界**：放假安排来自 `chinese_calendar`，按年打包（当前版本覆盖
+  2004-2026）。**2027 年的国务院放假通知要到 2026 年 10~11 月才发布**，在那之前
+  没有任何版本可升级，缺数据不是 bug，是数据还没存在。缺数据的年份退化为"只看周末"
+  （工作日按工作日算，约 96% 的情况是对的）。`bp doctor` 会打印覆盖范围，
+  不含今年时明确说出代价和解法；等新数据发布后升级依赖即可消除。
 - **单晚上限**：`ANALYSE_BATCH_LIMIT=80` 限制定时器每晚送模型的文章数；积压几百篇时
   它就是当晚账单的上限。手动 `bp analyse` 不受约束（自己决定 `--limit`）。设 0 = 不限。
 - **提示缓存**：`SYSTEM_PROMPT` 是不变的静态块，作为 system 消息发送，
@@ -359,7 +367,7 @@ bp gate               # 正式执行
 | `bp ls [--product X] [--status pending] [--type free_credits] [--unclaimed]` | 查询福利 |
 | `bp show ID` / `bp mark ID` / `bp status ID dubious --reason ...` | 详情 / 标记已领取 / 人工改状态 |
 | `bp export --format csv\|json [--out FILE]` | 导出 |
-| `bp stats` / `bp doctor` | 统计 / 自检（配置、schema、当前是否高峰） |
+| `bp stats` / `bp doctor` | 统计 / 自检（配置、schema、当前是否高峰、**节假日数据覆盖范围**） |
 | `bp mail-test` | 发一封带 `.md` 附件的自检邮件 |
 
 ---
