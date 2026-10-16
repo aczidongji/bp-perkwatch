@@ -1,0 +1,28 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+
+      - name: Set up Python 3.12
+        run: uv python install 3.12
+
+      # 测试套件零网络依赖：所有外呼（HTTP / 模型 / SMTP）在 tests/ 里都被桩替换，
+      # 所以这里不需要任何 secret，也不需要 DEEPSEEK_API_KEY 或 SMTP 凭据。
+      - name: Install dependencies
+        run: uv sync --extra dev --frozen
+
+      - name: Run tests
+        run: uv run pytest -v
