@@ -49,6 +49,10 @@ class TestPathAnchoring:
         try:
             conn = db.connect()
             try:
+                # 干净检出时 data/ 不在仓库里（被 .gitignore 排除），所以这条用例必须
+                # 自己建表，不能假设项目里已经有一份迁移过的库。否则它只在
+                # "开发机上恰好有 bp.db" 时才过，CI 上必挂。
+                db.migrate(conn)
                 assert conn.execute("SELECT COUNT(*) FROM perks").fetchone()[0] >= 0
             finally:
                 conn.close()
