@@ -1,0 +1,13 @@
+[Unit]
+Description=AI 福利监控 - 每 15 分钟驱动一次状态机
+
+[Timer]
+# 每 15 分钟醒来一次，由 bp tick 自己判断"今天该不该跑"。
+# 不用 OnCalendar=18:05 是因为这台机器经常是关着的：定时器只在"该做而没做"时补做。
+OnCalendar=*:0/15
+Persistent=true
+RandomizedDelaySec=120
+OnBootSec=3min
+
+[Install]
+WantedBy=timers.target

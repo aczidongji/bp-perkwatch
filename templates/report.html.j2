@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"></head>
+<body style="margin:0;padding:16px;background:#f6f7f9;font-family:-apple-system,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;color:#1f2328;">
+<div style="max-width:760px;margin:0 auto;">
+
+  <div style="background:#0f172a;color:#fff;padding:18px 22px;border-radius:10px 10px 0 0;">
+    <div style="font-size:19px;font-weight:600;">AI 福利日报 · {{ day }}</div>
+    <div style="font-size:12px;opacity:.75;margin-top:4px;">{{ generated_at_local }} · {{ "自上次日报以来的变化" if stats.since else "首次运行（覆盖全部历史）" }}</div>
+  </div>
+
+  <div style="background:#fff;padding:16px 22px;border-left:1px solid #e3e6ea;border-right:1px solid #e3e6ea;">
+    {% for label, count in stats.statuses.items() %}<span style="display:inline-block;background:#eef1f5;border-radius:12px;padding:3px 10px;margin:3px 4px 3px 0;font-size:12px;">{{ label }} <b>{{ count }}</b></span>{% endfor %}
+    {% if folded_items %}<div style="font-size:12px;color:#57606a;margin-top:8px;line-height:1.6;">另有 <b>{{ folded_items }}</b> 条同时符合多个板块，已按「即将截止 › 已过期 › 已确认 › 新发现 › 规则更新 › 需人工判断」的优先级<b>只列一次</b>，所以每个板块的条数不等于库里该类福利的总数。</div>{% endif %}
+  </div>
+
+  <div style="background:#fff;padding:6px 22px 22px;border:1px solid #e3e6ea;border-top:none;border-radius:0 0 10px 10px;">
+  {% for key, title, items, groups in sections %}
+    {% if items %}
+      <h2 style="font-size:15px;margin:22px 0 10px;padding-bottom:6px;border-bottom:2px solid {% if key == 'expiring_soon' %}#d97706{% elif key == 'recently_expired' %}#9ca3af{% elif key == 'confirmed_live' %}#0f766e{% else %}#2563eb{% endif %};">{{ title }}（{{ items|length }} 条 · {{ groups|length }} 个产品）</h2>
+      {% for g in groups %}
+      <div style="margin:14px 0 6px;font-size:13px;font-weight:700;color:#0f172a;border-left:3px solid #cbd5e1;padding-left:8px;">{{ g.product }}{% if g.count > 1 %} <span style="font-weight:400;color:#57606a;">· {{ g.count }} 项</span>{% endif %}</div>
+      {% for p in g.perks %}
+      <div style="border:1px solid #e3e6ea;border-radius:8px;padding:12px 14px;margin-bottom:10px;">
+        <div style="font-size:14px;font-weight:600;">
+          {{ p.benefit_label or "未定性" }}{% if g.count > 1 %} {{ loop.index }}{% endif %}
+          <span style="font-weight:700;font-size:12.5px;margin-left:6px;color:{% if p.urgent %}#b91c1c{% elif p.days_left is not none and p.days_left <= 7 %}#b45309{% else %}#57606a{% endif %};">{{ p.countdown }}</span>
+          <span style="font-weight:400;font-size:12px;color:#fff;background:{% if p.status_label == '已确认' %}#0f766e{% elif p.status_label == '已过期' or p.status_label == '无效' %}#6b7280{% else %}#b45309{% endif %};border-radius:10px;padding:2px 8px;margin-left:6px;">{{ p.status_label }}</span>
+        </div>
+
+        <table style="font-size:12.5px;margin-top:8px;border-collapse:collapse;">
+          {% if p.entitlement %}<tr><td style="color:#57606a;padding:2px 10px 2px 0;white-space:nowrap;">权益</td><td>{{ p.entitlement }}</td></tr>{% endif %}
+          {% if p.quota %}<tr><td style="color:#57606a;padding:2px 10px 2px 0;">额度</td><td>{{ p.quota }}</td></tr>{% endif %}
+          <tr><td style="color:#57606a;padding:2px 10px 2px 0;">有效期</td><td>{{ p.starts_at or "?" }} ~ <b>{{ p.ends_at or "未注明" }}</b></td></tr>
+          {% if p.region %}<tr><td style="color:#57606a;padding:2px 10px 2px 0;">地区</td><td>{{ p.region }}</td></tr>{% endif %}
+          {% if p.eligibility %}<tr><td style="color:#57606a;padding:2px 10px 2px 0;">用户限制</td><td>{{ p.eligibility }}</td></tr>{% endif %}
+          <tr><td style="color:#57606a;padding:2px 10px 2px 0;">门槛</td><td>学生认证 {{ "需" if p.student_verification_required == 1 else ("免" if p.student_verification_required == 0 else "未说明") }} · 绑卡 {{ "需" if p.payment_method_required == 1 else ("免" if p.payment_method_required == 0 else "未说明") }} · 邀请 {{ "需" if p.invite_required == 1 else ("免" if p.invite_required == 0 else "未说明") }}</td></tr>
+          {% if p.claim_url %}<tr><td style="color:#57606a;padding:2px 10px 2px 0;">领取入口</td><td><a href="{{ p.claim_url }}">{{ p.claim_url }}</a></td></tr>{% endif %}
+          {% if p.rules_url %}<tr><td style="color:#57606a;padding:2px 10px 2px 0;">官方规则</td><td><a href="{{ p.rules_url }}">{{ p.rules_url }}</a></td></tr>{% endif %}
+          <tr><td style="color:#57606a;padding:2px 10px 2px 0;">可信度</td><td>{{ p.confidence_pct }}% · 最后核验 {{ p.verified_at_local or "从未" }}</td></tr>
+          {% if p.review_reason %}<tr><td style="color:#b45309;padding:2px 10px 2px 0;">待处理</td><td>{{ p.review_reason }}</td></tr>{% endif %}
+        </table>
+
+        {% if p.sources %}
+        <div style="margin-top:8px;font-size:12px;color:#57606a;">原文（{{ p.sources|length }} 个来源）</div>
+        {% for u in p.sources %}<div style="font-size:12px;"><a href="{{ u }}" style="color:#2563eb;">{{ u }}</a></div>{% endfor %}
+        {% endif %}
+      </div>
+      {% endfor %}
+      {% endfor %}
+    {% endif %}
+  {% endfor %}
+
+  {% if not total_items %}<p style="color:#57606a;font-size:13px;padding:16px 0;">本周期没有变化。</p>{% endif %}
+
+  <div style="margin-top:22px;padding:12px 14px;background:#f6f7f9;border-radius:8px;font-size:12px;color:#57606a;line-height:1.65;">
+    <b style="color:#1f2328;">阅读须知</b><br>
+    · 「已确认」仅代表<b>官方域名上的页面可访问且仍写着该权益</b>，不代表你一定领得到；资格、地区、库存都可能变化。<br>
+    · 「待核实 / 存疑」表示证据不足，或页面存在登录、付费、验证码门槛——本系统不会尝试绕过这些门槛。<br>
+    · 本系统只读取公开页面，从不提交表单、从不输入支付信息。<br>
+    · 完整 Markdown 见附件；历史与导出用命令行 <code>bp show &lt;id&gt; --history</code> / <code>bp export</code>。
+  </div>
+  </div>
+</div>
+</body>
+</html>

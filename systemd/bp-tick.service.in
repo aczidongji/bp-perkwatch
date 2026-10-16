@@ -1,0 +1,21 @@
+[Unit]
+Description=AI 福利监控 - 状态机 tick（采集/分析/日报投递）
+Documentation=file://${HOME}/project/bp/README.md
+
+[Service]
+Type=oneshot
+WorkingDirectory=${HOME}/project/bp
+Environment=PATH=${HOME}/.local/bin:/usr/bin:/bin
+ExecStart=${HOME}/project/bp/.venv/bin/bp tick
+# 机器可能长时间关机：单次跑不完也不要拖累下一轮
+TimeoutStartSec=3h
+Nice=10
+IOSchedulingClass=best-effort
+IOSchedulingPriority=6
+
+# 只读取本项目与配置，不碰其他目录
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=read-only
+ReadWritePaths=${HOME}/project/bp

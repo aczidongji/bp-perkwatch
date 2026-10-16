@@ -1,0 +1,194 @@
+# 信息源种子清单。
+#
+# 下面每一条都在 2026-10-15 用 `uv run bp sources check` 实测过可达且能解析出条目。
+# 校验方法：uv run bp sources check            （只测不通的文件请剔除）
+# 增删可直接在此文件，也可用 uv run bp sources add --url ... 或 Web 后台 /sources。
+#
+# kind = rss     订阅一个 feed
+# kind = web     直接抓一个网页正文
+# kind = search  把 url 字段当搜索词，发现新文章
+
+[[source]]
+name = "TechCrunch AI"
+kind = "rss"
+url = "https://techcrunch.com/category/artificial-intelligence/feed/"
+notes = "全球 AI 产品动态，常有官方免费活动新闻"
+
+[[source]]
+name = "OpenAI News"
+kind = "rss"
+url = "https://openai.com/news/rss.xml"
+product_hint = "OpenAI"
+notes = "官方源，ChatGPT/API 免费额度与促销的一手信息"
+
+[[source]]
+name = "Google DeepMind Blog"
+kind = "rss"
+url = "https://deepmind.google/blog/rss.xml"
+product_hint = "Google AI"
+
+[[source]]
+name = "GitHub Blog"
+kind = "rss"
+url = "https://github.blog/feed/"
+product_hint = "GitHub"
+
+[[source]]
+name = "GitHub Changelog"
+kind = "rss"
+url = "https://github.blog/changelog/feed/"
+product_hint = "GitHub Copilot"
+notes = "Copilot 套餐与免费策略变更常出现在这里"
+
+[[source]]
+name = "VS Code Changelog"
+kind = "rss"
+url = "https://code.visualstudio.com/feed.xml"
+product_hint = "Copilot"
+
+[[source]]
+name = "Hugging Face Blog"
+kind = "rss"
+url = "https://huggingface.co/blog/feed.xml"
+
+[[source]]
+name = "Ars Technica AI"
+kind = "rss"
+url = "https://arstechnica.com/ai/feed/"
+
+[[source]]
+name = "The Verge AI"
+kind = "rss"
+url = "https://www.theverge.com/rss/ai-artificial-intelligence/index.xml"
+
+[[source]]
+name = "MIT Tech Review AI"
+kind = "rss"
+url = "https://www.technologyreview.com/topic/artificial-intelligence/feed"
+
+[[source]]
+name = "Cloudflare Blog"
+kind = "rss"
+url = "https://blog.cloudflare.com/rss/"
+notes = "开发者免费额度活动较多"
+
+[[source]]
+name = "Simon Willison"
+kind = "rss"
+url = "https://simonwillison.net/atom/everything/"
+notes = "高频记录各家 AI 工具的免费政策变化"
+
+[[source]]
+name = "The Information"
+kind = "rss"
+url = "https://www.theinformation.com/feed"
+notes = "正文有付费墙，系统只会标记为存疑而不会尝试绕过"
+
+[[source]]
+name = "少数派"
+kind = "rss"
+url = "https://sspai.com/feed"
+notes = "中文，大量限免/免费领会员/学生优惠类文章"
+
+[[source]]
+name = "小众软件"
+kind = "rss"
+url = "https://www.appinn.com/feed/"
+notes = "中文，兑换码与白嫖活动高发地"
+
+[[source]]
+name = "异次元软件世界"
+kind = "rss"
+url = "https://feed.iplaysoft.com/"
+notes = "中文，长期发布免费领正版/会员活动"
+
+[[source]]
+name = "极客公园"
+kind = "rss"
+url = "https://www.geekpark.net/rss"
+
+[[source]]
+name = "OpenOSChina 新闻"
+kind = "rss"
+url = "https://www.oschina.net/news/rss"
+
+[[source]]
+name = "V2EX 技术话题"
+kind = "rss"
+url = "https://www.v2ex.com/feed/tab/tech.xml"
+notes = "中文社区，常有用户分享的免费额度与领取经验（需官方核验，不可直接采信）"
+
+[[source]]
+name = "InfoQ 中文"
+kind = "rss"
+url = "https://www.infoq.cn/feed"
+
+# 官方页面直采（正文提取，不走搜索）。这些域名同时列在 official_domains.toml，
+# 因此从这里识别出的福利可以直接通过官方核验门槛。
+[[source]]
+name = "Cursor Pricing"
+kind = "web"
+url = "https://www.cursor.com/pricing"
+product_hint = "Cursor"
+
+[[source]]
+name = "GitHub Copilot Plans"
+kind = "web"
+url = "https://github.com/features/copilot/plans"
+product_hint = "GitHub Copilot"
+
+[[source]]
+name = "GitHub Education Pack"
+kind = "web"
+url = "https://education.github.com/pack"
+product_hint = "GitHub Student"
+notes = "学生认证福利合集（需学生验证，页面本身是公开可读的条款说明）"
+
+[[source]]
+name = "GitHub Copilot Plans 文档"
+kind = "web"
+url = "https://docs.github.com/en/copilot/get-started/plans"
+product_hint = "GitHub Copilot"
+
+[[source]]
+name = "Anthropic Pricing"
+kind = "web"
+url = "https://www.anthropic.com/pricing"
+product_hint = "Claude"
+
+[[source]]
+name = "VS Code Copilot 文档"
+kind = "web"
+url = "https://code.visualstudio.com/docs/copilot/overview"
+product_hint = "GitHub Copilot"
+
+# 关键词发现：把公开搜索作为"新文章发现器"，命中后再抓正文入库。
+[[source]]
+name = "搜索：AI 工具免费会员"
+kind = "search"
+url = "AI 工具 免费会员 领取 限时"
+
+[[source]]
+name = "搜索：AI 兑换码"
+kind = "search"
+url = "AI 兑换码 免费额度 领取入口"
+
+[[source]]
+name = "搜索：学生优惠"
+kind = "search"
+url = "AI 编程工具 学生 免费 认证"
+
+[[source]]
+name = "搜索：大模型免费额度"
+kind = "search"
+url = "大模型 API 新用户 免费额度 token"
+
+[[source]]
+name = "搜索：Copilot 免费"
+kind = "search"
+url = "GitHub Copilot 免费 学生 教师 申请"
+
+[[source]]
+name = "搜索：AI 会员活动"
+kind = "search"
+url = "AI 会员 免费送 活动 截止"

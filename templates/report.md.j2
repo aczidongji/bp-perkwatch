@@ -1,0 +1,54 @@
+# AI 福利日报 — {{ day }}
+
+生成时间：{{ generated_at_local }}
+统计范围：{{ "自上次日报以来" if stats.since else "首次运行（全部历史）" }}
+
+| 状态 | 数量 |
+|---|---|
+{% for label, count in stats.statuses.items() %}| {{ label }} | {{ count }} |
+{% endfor %}
+
+{% if folded_items %}
+> 另有 {{ folded_items }} 条同时符合多个板块，已按「即将截止 › 已过期 › 已确认 › 新发现 › 规则更新 › 需人工判断」的优先级**只列一次**，所以每个板块的条数不等于库里该类福利的总数。
+{% endif %}
+---
+{% for key, title, items, groups in sections %}
+{% if items %}
+
+## {{ title }}（{{ items|length }} 条 · {{ groups|length }} 个产品）
+
+{% for g in groups %}
+### {{ g.product }}{% if g.count > 1 %}（{{ g.count }} 项）{% endif %}
+
+{% for p in g.perks %}
+#### {{ p.benefit_label or "未定性" }}{% if g.count > 1 %} {{ loop.index }}{% endif %} — {% if p.urgent %}**{{ p.countdown }}**{% else %}{{ p.countdown }}{% endif %}
+
+- **状态**：{{ p.status_label }}{% if p.user_claimed %} / 已领取{% endif %}{% if p.ends_at %}｜截止 {{ p.ends_at }}{% endif %}
+
+{% if p.entitlement %}- **权益**：{{ p.entitlement }}
+{% endif %}{% if p.quota %}- **额度**：{{ p.quota }}
+{% endif %}{% if p.starts_at %}- **开始**：{{ p.starts_at }}
+{% endif %}{% if p.region %}- **适用地区**：{{ p.region }}
+{% endif %}{% if p.eligibility %}- **新老用户限制**：{{ p.eligibility }}
+{% endif %}- **门槛**：学生认证{{ "需要" if p.student_verification_required == 1 else ("不需要" if p.student_verification_required == 0 else "未说明") }}｜绑卡{{ "需要" if p.payment_method_required == 1 else ("不需要" if p.payment_method_required == 0 else "未说明") }}｜邀请好友{{ "需要" if p.invite_required == 1 else ("不需要" if p.invite_required == 0 else "未说明") }}
+{% if p.claim_url %}- **领取入口**：{{ p.claim_url }}
+{% endif %}{% if p.rules_url %}- **官方规则**：{{ p.rules_url }}
+{% endif %}- **可信度**：{{ p.confidence_pct }}%｜最后核验：{{ p.verified_at_local or "从未核验" }}
+{% if p.review_reason %}- **待处理原因**：{{ p.review_reason }}
+{% endif %}{% if p.sources %}- **原文（共 {{ p.sources|length }} 个来源）**：
+{% for u in p.sources %}  - {{ u }}
+{% endfor %}{% endif %}
+{% endfor %}
+{% endfor %}
+{% endif %}
+{% endfor %}
+
+---
+
+## 阅读须知
+
+- 「已确认」仅代表**官方域名上的页面可访问且仍写着该权益**，不代表你一定能领到；资格、地区、库存都可能变化。
+- 「待核实」「存疑」表示证据不足或页面有登录/付费/验证码门槛，本系统不会尝试绕过这类门槛。
+- 一条福利在一封日报里只出现一次（见上方优先级说明）。它今天归在「新发现」，明天若仍缺证据就会改列「需人工判断」，不会消失。
+- 本系统只读取公开页面，从不提交任何表单、从不输入支付信息。
+- 完整历史与导出：`bp show <id> --history`、`bp ls`、`bp export --output perks.csv`。

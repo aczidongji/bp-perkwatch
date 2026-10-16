@@ -1,0 +1,17 @@
+.env
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+htmlcov/
+dist/
+build/
+*.egg-info/
+data/
+reports/*.md
+reports/*.html
+# 内部交接文档，不是给外部读者看的
+HANDOFF.md
+*.log
+.DS_Store
