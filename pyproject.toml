@@ -5,10 +5,6 @@ description = "Local AI perk monitor: collect, dedupe, LLM-extract, verify again
 requires-python = ">=3.12"
 license = "MIT"
 authors = [{ name = "aczidongji" }]
-[project.urls]
-Homepage = "https://github.com/aczidongji/bp-perkwatch"
-Repository = "https://github.com/aczidongji/bp-perkwatch"
-Issues = "https://github.com/aczidongji/bp-perkwatch/issues"
 dependencies = [
     "feedparser>=6.0,<7",
     "trafilatura>=2.0,<3",
@@ -23,6 +19,11 @@ dependencies = [
     "tenacity>=9.0",
     "chinesecalendar>=1.9",
 ]
+
+[project.urls]
+Homepage = "https://github.com/aczidongji/bp-perkwatch"
+Repository = "https://github.com/aczidongji/bp-perkwatch"
+Issues = "https://github.com/aczidongji/bp-perkwatch/issues"
 
 [project.optional-dependencies]
 dev = ["pytest>=8.2", "pytest-cov"]

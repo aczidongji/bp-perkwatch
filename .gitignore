@@ -13,5 +13,7 @@ reports/*.md
 reports/*.html
 # 内部交接文档，不是给外部读者看的
 HANDOFF.md
+# 简历素材/阶段性总结，服务对象是作者本人而非使用者
+PROJECT-SUMMARY.md
 *.log
 .DS_Store

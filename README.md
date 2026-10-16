@@ -7,9 +7,10 @@
 它的唯一目标是**替你省时间**：不是摘要工具，不是新闻聚合。
 一篇看不出「谁能免费拿到什么、到什么时候」的文章，对它来说就是噪声。
 
-> **相关文档**：[`PROJECT-SUMMARY.md`](PROJECT-SUMMARY.md) 阶段性总结（架构、选型理由、
-> 17 个已修问题、已知限制、简历素材）；[`HANDOFF.md`](HANDOFF.md) 交接文档
-> （五轮改动明细、未办事项、验证命令）。
+> **相关文档**：`README.md`（本文件）是完整的架构、选型理由与命令参考。
+> 测试由 GitHub Actions 自动运行：338 条用例，零网络依赖，约 80 秒。
+
+[![CI](https://github.com/aczidongji/bp-perkwatch/actions/workflows/ci.yml/badge.svg)](https://github.com/aczidongji/bp-perkwatch/actions/workflows/ci.yml)
 
 ---
 
@@ -37,16 +38,19 @@ INSTALL_TIMERS=yes bash scripts/bootstrap.sh   # 开机自动跑（systemd 用�
 ## 2. 数据流
 
 ```
-                    ┌──────────────── 每天 18:05 北京时间 ────────────────┐
-config/sources.toml │                                                    │
-  32 个来源      ───┼─▶ 采集 ─▶ 四层去重 ─▶ 关键词预筛 ─▶ DeepSeek 抽取 ─┼─▶ 官方核验 ─▶ 状态机
-  RSS / 网页 / 搜索 │    │        (574 篇)     (免费)      (低谷期半价)   │      │
-                    │    │                                 │            │      │
-                    └────┼─────────────────────────────────┼────────────┼──────┘
-                         ▼                                 ▼           ▼
-                    SQLite (data/bp.db)  ─────▶ 日报 .md/.html ─▶ Gmail 10:00
-                                                  （正文可读 + .md 附件）
+┌──────────────────────── every night 18:05 (Beijing) ────────────────────────┐
+ sources.toml │─▶ collect ─▶ dedupe x4 ─▶ prefilter ─▶ DeepSeek ─▶ verify│
+   32 sources │    │    977 articles    free     off-peak    │           │
+               └─────────────────────────────────────────────┼───────────┼────┘
+               ▼                                             ▼
+               SQLite (data/bp.db)  ──────────▶ daily report ─▶ Gmail 10:00
+                                           (.md / .html + .md attachment)
 ```
+
+> 图里**故意不用中文**：中文字符在等宽字体里占两格，混在框线里必然错位。
+> 中文说明：`collect` 采集 32 个来源；`dedupe x4` 四级去重（见 §6）；
+> `prefilter` 零成本关键词预筛；`DeepSeek` 低谷期抽取；`verify` 回访官方域名核验。
+> `977 articles` 是真实入库量，`free` 指预筛不花 token，`off-peak` 指模型调用半价。
 
 每个环节都只依赖前一个环节的产物，没有隐藏状态：文章、福利、证据、核验记录、
 状态变更历史、通知记录全部落库，任何一步出错都可以单独重跑。
@@ -241,6 +245,74 @@ HTML 版按紧迫度上色（≤2 天红、≤7 天橙），Markdown 版紧迫�
 丢掉的 16 条里，**Hugging Face 的 "$20 compute credits" 是唯一有争议的一条**
 ——它确实像赠送，但原文没写怎么拿到，这个闸门看不见"怎么拿到"就只能判掉。
 宁可漏报也不把套餐说明当福利，这是有意的取舍。
+
+### 日报长什么样（真实摘录）
+
+下面是从一封真实日报里摘出来的（条目已精简，来源链接原样保留）。
+它直接说明了这个系统的价值：**16 条被判为"不是促销"的条目带着原因出现一次然后消失，
+剩下 12 条才是你真的可以去领的。**
+
+```
+# AI 福利日报 — 2026-10-16
+
+| 状态 | 数量 |
+|---|---|
+| 待核实 | 11 |
+| 已确认 | 0 |
+| 已过期 | 0 |
+| 无效 | 16 |
+| 存疑 | 1 |
+
+## 需要你人工判断（12 条 · 11 个产品）
+
+### GitHub Copilot（2 项）
+#### 学生优惠 2 — 未注明截止日
+- **状态**：待核实
+- **权益**：经过验证的学生可免费使用 Copilot 功能
+- **新老用户限制**：面向经过验证的学生
+- **门槛**：学生认证需要｜绑卡未说明｜邀请好友未说明
+- **可信度**：90%｜最后核验：10-15 19:39
+- **待处理原因**：缺少领取入口链接
+- **原文（共 1 个来源）**：
+  - https://docs.github.com/en/copilot/get-started/plans
+
+### Kiro
+#### 未定性 — 未注明截止日
+- **状态**：待核实
+- **权益**：免费使用一整年 Kiro，且无需信用卡
+- **适用地区**：全球 18 个国家
+- **新老用户限制**：全球 18 个国家、132 所大学的在校学生，有 .edu 学生身份且学校在名单内大学
+- **门槛**：学生认证需要｜绑卡不需要｜邀请好友未说明
+- **官方规则**：https://www.aboutamazon.com/news/aws/amazon-expands-free-kiro-access-students-universities
+- **可信度**：40%｜最后核验：10-15 19:53
+- **待处理原因**：缺少领取入口链接
+
+## 本周期内过期或失效（16 条 · 14 个产品）
+
+### Cloudflare Traces
+#### 免费额度 — 未注明截止日
+- **状态**：无效
+- **权益**：Free plan includes 0.5 GB of ingestion per day with 7 days retention
+- **额度**：0.5 GB of ingestion per day
+- **可信度**：90%｜最后核验：10-15 19:39
+- **待处理原因**：系统规则复核：这只是产品/套餐的固有属性，不是促销活动
+- **原文（共 1 个来源）**：
+  - https://blog.cloudflare.com/cloudflare-tracing/
+
+### GitHub Copilot（3 项）
+#### 免费会员 1 — 未注明截止日
+- **状态**：无效
+- **权益**：GitHub Copilot Free users are limited to 2000 completions and 50 chat requests (including Copilot Edits).
+- **额度**：2000 completions and 50 chat requests
+- **可信度**：90%｜最后核验：10-15 19:39
+- **待处理原因**：系统规则复核：这只是产品/套餐的固有属性，不是促销活动
+- **原文（共 1 个来源）**：
+  - https://github.com/features/copilot/plans
+```
+
+两条细节值得注意：`Free plan includes 0.5 GB` 和 `limited to 2000 completions`
+都被判成"套餐固有属性"而不是福利——**前者是免费档的配额，后者是上限而不是赠送**；
+而"学生认证后可免费使用 Copilot"留下了，因为它写明了怎么拿到。
 
 ### 词表改了之后怎么办（`bp gate`）
 
