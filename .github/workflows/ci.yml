@@ -9,10 +9,12 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
+      # 钉住精确版本：setup-uv 从 v8 起不再发布 v8/v9/v10 这类浮动主版本标签，
+      # 写 `setup-uv@v10` 会直接报 "unable to find version v10"。
       - name: Install uv
-        uses: astral-sh/setup-uv@v6
+        uses: astral-sh/setup-uv@v10.3.0
         with:
           enable-cache: true
 
