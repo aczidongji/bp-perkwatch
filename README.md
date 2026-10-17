@@ -8,7 +8,7 @@
 一篇看不出「谁能免费拿到什么、到什么时候」的文章，对它来说就是噪声。
 
 > **相关文档**：`README.md`（本文件）是完整的架构、选型理由与命令参考。
-> 测试由 GitHub Actions 自动运行：338 条用例，零网络依赖，约 80 秒。
+> 测试由 GitHub Actions 自动运行：343 条用例，零网络依赖，约 73 秒。
 
 [![CI](https://github.com/aczidongji/bp-perkwatch/actions/workflows/ci.yml/badge.svg)](https://github.com/aczidongji/bp-perkwatch/actions/workflows/ci.yml)
 
@@ -401,10 +401,10 @@ SEARCH_DENY_DOMAINS=     # 逗号/分号/空格分隔的排除域名
 
 ## 14. 测试与实跑台账
 
-### 已验证（自动化测试，311 条用例，本地全绿）
+### 已验证（自动化测试，343 条用例，本地全绿）
 
 ```bash
-uv run pytest            # 311 passed in ~107s
+uv run pytest            # 343 passed in ~73s
 ```
 
 | 领域 | 用例 | 覆盖内容 |
